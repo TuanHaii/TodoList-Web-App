@@ -15,6 +15,8 @@ class ApiService {
     const url = `${this.baseURL}${endpoint}`;
     const token = this.getAuthToken();
     
+    console.log('API Request:', { url, method: options.method || 'GET' });
+    
     const config: RequestInit = {
       headers: {
         'Content-Type': 'application/json',
@@ -27,16 +29,23 @@ class ApiService {
     try {
       const response = await fetch(url, config);
       
+      console.log('API Response:', { status: response.status, ok: response.ok });
+      
       if (!response.ok) {
         if (response.status === 401) {
           // Token expired or invalid
           localStorage.removeItem('authToken');
           window.location.href = '/login';
         }
-        throw new Error(`HTTP error! status: ${response.status}`);
+        
+        const errorText = await response.text();
+        console.error('API Error Response:', errorText);
+        throw new Error(`HTTP error! status: ${response.status}, body: ${errorText}`);
       }
       
-      return await response.json();
+      const data = await response.json();
+      console.log('API Success Response:', data);
+      return data;
     } catch (error) {
       console.error('API request failed:', error);
       throw error;
@@ -44,12 +53,12 @@ class ApiService {
   }
 
   // Auth methods
-  async login(email: string, password: string) {
+  async login(username: string, password: string) {
     const response = await this.request<{ user: User; token: string }>(
       API_ENDPOINTS.AUTH.LOGIN,
       {
         method: 'POST',
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ username, password }),
       }
     );
     
@@ -60,12 +69,12 @@ class ApiService {
     return response;
   }
 
-  async register(name: string, email: string, password: string) {
+  async register(username: string, email: string, password: string) {
     const response = await this.request<{ user: User; token: string }>(
       API_ENDPOINTS.AUTH.REGISTER,
       {
         method: 'POST',
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ username, email, password }),
       }
     );
 

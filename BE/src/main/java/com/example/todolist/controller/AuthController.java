@@ -28,25 +28,40 @@ public class AuthController {
     
     // POST /api/auth/login - Đăng nhập
     @PostMapping("/login")
-    public ResponseEntity<Map<String, String>> login(@RequestBody Map<String, String> loginData) {
+    public ResponseEntity<Map<String, Object>> login(@RequestBody Map<String, String> loginData) {
         String username = loginData.get("username");
         String password = loginData.get("password");
         
         if (username == null || password == null) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Username và password không được để trống"));
+            return ResponseEntity.badRequest().body(Map.of(
+                "success", false,
+                "error", "Username và password không được để trống"
+            ));
         }
         
         // Kiểm tra đăng nhập (tạm thời đơn giản)
         boolean isValid = userService.validateUser(username, password);
         
         if (isValid) {
+            // Generate JWT token
+            String token = jwtService.generateToken(username);
+            
             return ResponseEntity.ok(Map.of(
-                "message", "Đăng nhập thành công",
-                "username", username,
-                "status", "success"
+                "success", true,
+                "data", Map.of(
+                    "user", Map.of(
+                        "username", username,
+                        "email", username + "@example.com" // Tạm thời
+                    ),
+                    "token", token
+                ),
+                "message", "Đăng nhập thành công"
             ));
         } else {
-            return ResponseEntity.status(401).body(Map.of("error", "Tên đăng nhập hoặc mật khẩu không đúng"));
+            return ResponseEntity.status(401).body(Map.of(
+                "success", false,
+                "error", "Tên đăng nhập hoặc mật khẩu không đúng"
+            ));
         }
     }
 

@@ -10,7 +10,7 @@ import { useLogin, useRegister } from '../hooks/useAuth';
 export const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [loginData, setLoginData] = useState({ email: '', password: '' });
+  const [loginData, setLoginData] = useState({ username: '', password: '' });
   const [registerData, setRegisterData] = useState({ 
     name: '', 
     email: '', 
@@ -24,7 +24,7 @@ export const LoginPage = () => {
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     loginMutation.mutate({
-      email: loginData.email,
+      username: loginData.username,
       password: loginData.password,
     });
   };
@@ -116,18 +116,18 @@ export const LoginPage = () => {
                 <TabsContent value="login" className="space-y-4">
                   <form onSubmit={handleLogin} className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="login-email" className="text-sm font-medium text-gray-700">
-                        Email Address
+                      <Label htmlFor="login-username" className="text-sm font-medium text-gray-700">
+                        Username
                       </Label>
                       <div className="relative">
                         <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                         <Input
-                          id="login-email"
-                          type="email"
-                          placeholder="Enter your email"
+                          id="login-username"
+                          type="text"
+                          placeholder="Enter your username"
                           className="pl-10 h-12"
-                          value={loginData.email}
-                          onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
+                          value={loginData.username}
+                          onChange={(e) => setLoginData({ ...loginData, username: e.target.value })}
                           required
                         />
                       </div>
