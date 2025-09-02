@@ -4,6 +4,12 @@ import { User, Task, ApiResponse } from '../types';
 class ApiService {
   private baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
 
+  constructor() {
+    console.log('🔧 API Service initialized');
+    console.log('🌍 Environment VITE_API_URL:', import.meta.env.VITE_API_URL);
+    console.log('🔗 Using baseURL:', this.baseURL);
+  }
+
   private getAuthToken(): string | null {
     return localStorage.getItem('authToken');
   }
