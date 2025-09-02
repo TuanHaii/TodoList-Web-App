@@ -2,7 +2,7 @@ import { API_ENDPOINTS } from '../constants';
 import { User, Task, ApiResponse } from '../types';
 
 class ApiService {
-  private baseURL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+  private baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
 
   private getAuthToken(): string | null {
     return localStorage.getItem('authToken');
