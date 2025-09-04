@@ -102,7 +102,8 @@ class ApiService {
 
   // User methods
   async getProfile() {
-    return this.request<User>(API_ENDPOINTS.USERS.PROFILE);
+  const res = await this.request<{ success: boolean; data: User }>(API_ENDPOINTS.USERS.PROFILE);
+  return res.data; // chỉ trả về userDTO, bỏ success/message
   }
 
   async updateProfile(data: Partial<User>) {
