@@ -1,20 +1,20 @@
 // API endpoints
 export const API_ENDPOINTS = {
   AUTH: {
-    LOGIN: '/api/auth/login',
-    REGISTER: '/api/auth/register',
-    LOGOUT: '/api/auth/logout',
-    REFRESH: '/api/auth/refresh',
+    LOGIN: '/auth/login',
+    REGISTER: '/auth/register',
+    LOGOUT: '/auth/logout',
+    REFRESH: '/auth/refresh',
   },
   USERS: {
-    PROFILE: '/api/users/profile',
-    UPDATE: '/api/users/update',
+    PROFILE: '/users/profile',
+    UPDATE: '/users/update',
   },
   TASKS: {
-    LIST: '/api/tasks',
-    CREATE: '/api/tasks',
-    UPDATE: (id: string) => `/api/tasks/${id}`,
-    DELETE: (id: string) => `/api/tasks/${id}`,
+    LIST: '/tasks',
+    CREATE: '/tasks',
+    UPDATE: (id: string) => `/tasks/${id}`,
+    DELETE: (id: string) => `/tasks/${id}`,
   },
 } as const;
 

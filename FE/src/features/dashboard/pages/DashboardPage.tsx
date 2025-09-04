@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from '@/shared/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Badge } from '@/shared/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/components/ui/avatar';
 import { Input } from '@/shared/components/ui/input';
 import { Skeleton } from '@/shared/components/ui/skeleton';
+import TodayInfo from '../components/todayInfo';
+import { apiService } from '@/shared/services/api';
 import { 
   Search, 
   Bell, 
@@ -26,13 +28,25 @@ import {
 } from 'lucide-react';
 import { useTasks, useCreateTask, useUpdateTask, useDeleteTask } from '../hooks/useTasks';
 import { useUser, useLogout } from '@/features/auth/hooks/useAuth';
-import { Task } from '@/shared/types';
+import { Task, User } from '@/shared/types';
 
 export const DashboardPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  
+  const [user, setUser] = useState<User | null>(null);
   // API hooks
-  const { data: user, isLoading: userLoading } = useUser();
+  useEffect(() => {
+  const fetchProfile = async () => {
+    try {
+      const user = await apiService.getProfile();
+      setUser(user.data); // user chính là UserDTO
+    } catch (err) {
+      console.error("Lỗi lấy profile:", err);
+    }
+  };
+  fetchProfile();
+}, []);
+
+  const {isLoading: userLoading } = useUser();
   const { data: tasks = [], isLoading: tasksLoading, error: tasksError } = useTasks();
   const createTaskMutation = useCreateTask();
   const updateTaskMutation = useUpdateTask();
@@ -102,11 +116,11 @@ export const DashboardPage = () => {
             <Avatar className="w-10 h-10">
               <AvatarImage src={user?.avatar} />
               <AvatarFallback>
-                {user?.name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'U'}
+                {user?.fullname?.split(' ').map(n => n[0]).join('').toUpperCase() || 'U'}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">{user?.name || 'Loading...'}</p>
+              <p className="text-sm font-medium truncate">{user?.fullname || user?.username || 'Loading...'}</p>
               <p className="text-xs text-pink-100 truncate">{user?.email}</p>
             </div>
           </div>
@@ -184,20 +198,26 @@ export const DashboardPage = () => {
               </div>
             </div>
             
-            <div className="flex items-center space-x-3">
-              <Button size="sm">
-                <Plus className="w-4 h-4 mr-2" />
-                Add Task
+            <div className="flex items-center space-x-4">
+              <Button variant="ghost" size="icon" className="relative">
+                <Bell className="w-5 h-5" />
+                <span className="absolute -top-1 -right-1 bg-pink-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">3</span>
               </Button>
-              <Button variant="outline" size="sm">
-                <Bell className="w-4 h-4" />
+              <Button variant="ghost" size="icon">
+                <Settings className="w-5 h-5" />
               </Button>
+              <div className="text-right">
+                <p><TodayInfo /></p>
+              </div>
             </div>
           </div>
         </header>
 
         {/* Content */}
         <main className="flex-1 overflow-auto p-6">
+           <div className="mb-6">
+            <h2 className="text-2xl font-bold text-gray-900 mb-1">Welcome back, {user?.fullname || 'Loading...'} 👋</h2>
+          </div>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Tasks List */}
             <div className="lg:col-span-2 space-y-6">
@@ -206,6 +226,9 @@ export const DashboardPage = () => {
                   <CardTitle className="flex items-center justify-between">
                     <span>Active Tasks</span>
                     {tasksLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+                     <Button variant="ghost" size="sm" className="text-pink-500">
+                   + Add task
+                     </Button>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>

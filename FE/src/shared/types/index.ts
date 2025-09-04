@@ -2,10 +2,11 @@
 export interface User {
   id: string;
   email: string;
-  name: string;
+  username: string;
+  fullname: string;
+  password: string;
   avatar?: string;
   createdAt?: string;
-  updatedAt?: string;
 }
 
 export interface Task {
@@ -32,13 +33,13 @@ export interface ApiResponse<T> {
 }
 
 export interface LoginRequest {
-  email: string;
+  username: string;
   password: string;
 }
 
 export interface RegisterRequest {
-  name: string;
   email: string;
+  username: string;
   password: string;
 }
 
