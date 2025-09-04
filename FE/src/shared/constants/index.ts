@@ -11,10 +11,10 @@ export const API_ENDPOINTS = {
     UPDATE: '/users/update',
   },
   TASKS: {
-    LIST: '/tasks',
-    CREATE: '/tasks',
-    UPDATE: (id: string) => `/tasks/${id}`,
-    DELETE: (id: string) => `/tasks/${id}`,
+    LIST: '/todos/user',
+    CREATE: '/todos',
+    UPDATE: (id: string) => `/todos/${id}`,
+    DELETE: (id: string) => `/todos/${id}`,
   },
 } as const;
 
@@ -28,7 +28,7 @@ export const ROUTES = {
 
 // Common constants
 export const APP_CONFIG = {
-  APP_NAME: 'MGX Platform',
+  APP_NAME: 'TODO LIST',
   VERSION: '1.0.0',
-  DESCRIPTION: 'A modern React application with shadcn/ui',
+  DESCRIPTION: '',
 } as const;

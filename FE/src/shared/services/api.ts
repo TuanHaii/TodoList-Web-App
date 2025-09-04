@@ -1,5 +1,5 @@
 import { API_ENDPOINTS } from '../constants';
-import { User, Task, ApiResponse } from '../types';
+import { User, Task, TodoItem, ApiResponse } from '../types';
 
 class ApiService {
   private baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
@@ -115,7 +115,7 @@ class ApiService {
 
   // Task methods
   async getTasks() {
-    return this.request<Task[]>(API_ENDPOINTS.TASKS.LIST);
+    return this.request<TodoItem[]>(API_ENDPOINTS.TASKS.LIST);
   }
 
   async getTask(id: string) {

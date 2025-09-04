@@ -25,6 +25,16 @@ export interface Task {
   date?: string;
 }
 
+// Backend todo item type
+export interface TodoItem {
+  id: number;
+  title: string;
+  description: string;
+  completed: boolean;
+  username: string;
+  category: string;
+}
+
 export interface ApiResponse<T> {
   data: T;
   message: string;
