@@ -48,16 +48,29 @@ export const DashboardPage = () => {
 
   const {isLoading: userLoading } = useUser();
   const { data: tasks = [], isLoading: tasksLoading, error: tasksError } = useTasks();
+
+  console.log('📋 Dashboard tasks:', tasks);
+  console.log('📋 Tasks type:', typeof tasks);
+  console.log('📋 Is array:', Array.isArray(tasks));
   const createTaskMutation = useCreateTask();
   const updateTaskMutation = useUpdateTask();
   const deleteTaskMutation = useDeleteTask();
   const logoutMutation = useLogout();
 
   // Filter tasks based on search query
-  const filteredTasks = tasks.filter(task =>
-    task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    task.description.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredTasks = tasks.filter(task => {
+    console.log('🔍 Filtering task:', task);
+    if (!task.title || !task.description) {
+      console.log('⚠️ Task missing title or description:', task);
+      return false;
+    }
+    return task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+           task.description.toLowerCase().includes(searchQuery.toLowerCase());
+  });
+
+  console.log('📋 Total tasks:', tasks.length);
+  console.log('🔍 Filtered tasks:', filteredTasks.length);
+  console.log('🔍 Search query:', searchQuery);
 
   const handleLogout = () => {
     logoutMutation.mutate();
@@ -73,24 +86,6 @@ export const DashboardPage = () => {
   const handleDeleteTask = (taskId: string) => {
     if (confirm('Are you sure you want to delete this task?')) {
       deleteTaskMutation.mutate(taskId);
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Urgent': return 'bg-red-100 text-red-800';
-      case 'In Progress': return 'bg-blue-100 text-blue-800';
-      case 'Completed': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'High': return 'bg-red-100 text-red-800';
-      case 'Medium': return 'bg-yellow-100 text-yellow-800';
-      case 'Low': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
@@ -259,7 +254,6 @@ export const DashboardPage = () => {
                       {filteredTasks.map((task) => (
                         <div key={task.id} className="flex items-start space-x-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                           <Avatar className="h-12 w-12">
-                            <AvatarImage src={task.image} />
                             <AvatarFallback>
                               <CheckSquare className="h-6 w-6" />
                             </AvatarFallback>
@@ -274,26 +268,24 @@ export const DashboardPage = () => {
                                   {task.description}
                                 </p>
                                 <div className="flex items-center space-x-2 mt-2">
-                                  <Badge className={getStatusColor(task.status)} variant="secondary">
-                                    {task.status}
+                                  <Badge className="bg-blue-100 text-blue-800" variant="secondary">
+                                    {task.completed ? 'Completed' : 'In Progress'}
                                   </Badge>
-                                  <Badge className={getPriorityColor(task.priority)} variant="secondary">
-                                    {task.priority}
+                                  <Badge className="bg-green-100 text-green-800" variant="secondary">
+                                    {task.category || 'General'}
                                   </Badge>
-                                  {task.dueDate && (
-                                    <div className="flex items-center text-xs text-gray-500">
-                                      <Clock className="h-3 w-3 mr-1" />
-                                      {new Date(task.dueDate).toLocaleDateString()}
-                                    </div>
-                                  )}
+                                  <div className="flex items-center text-xs text-gray-500">
+                                    <Clock className="h-3 w-3 mr-1" />
+                                    {task.username}
+                                  </div>
                                 </div>
                               </div>
                               <div className="flex items-center space-x-2 ml-4">
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  onClick={() => handleUpdateTaskStatus(task.id, 
-                                    task.status === 'Completed' ? 'In Progress' : 'Completed'
+                                  onClick={() => handleUpdateTaskStatus(task.id.toString(), 
+                                    task.completed ? 'In Progress' : 'Completed'
                                   )}
                                   disabled={updateTaskMutation.isPending}
                                 >
@@ -302,7 +294,7 @@ export const DashboardPage = () => {
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  onClick={() => handleDeleteTask(task.id)}
+                                  onClick={() => handleDeleteTask(task.id.toString())}
                                   disabled={deleteTaskMutation.isPending}
                                 >
                                   <Trash2 className="h-4 w-4" />
@@ -333,19 +325,19 @@ export const DashboardPage = () => {
                     <div className="flex justify-between">
                       <span className="text-sm text-gray-600">Completed</span>
                       <span className="font-medium text-green-600">
-                        {tasks.filter(t => t.status === 'Completed').length}
+                        {tasks.filter(t => t.completed).length}
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-sm text-gray-600">In Progress</span>
                       <span className="font-medium text-blue-600">
-                        {tasks.filter(t => t.status === 'In Progress').length}
+                        {tasks.filter(t => !t.completed).length}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">Urgent</span>
-                      <span className="font-medium text-red-600">
-                        {tasks.filter(t => t.status === 'Urgent').length}
+                      <span className="text-sm text-gray-600">Categories</span>
+                      <span className="font-medium text-purple-600">
+                        {Array.from(new Set(tasks.map(t => t.category))).length}
                       </span>
                     </div>
                   </div>
