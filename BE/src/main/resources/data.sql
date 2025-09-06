@@ -50,3 +50,4 @@ INSERT INTO todo_items (id, title, description, completed, user_id, category_id)
 (3, 'Học Spring Boot', 'Đọc tài liệu và làm bài tập Spring Boot', true, 2, 3),
 (4, 'Meeting với team', 'Họp review dự án lúc 2pm', false, 2, 1),
 (5, 'Tập thể dục', 'Chạy bộ 30 phút ở công viên', false, 3, 2);
+
