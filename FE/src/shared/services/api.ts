@@ -20,9 +20,7 @@ class ApiService {
   ): Promise<ApiResponse<T>> {
     const url = `${this.baseURL}${endpoint}`;
     const token = this.getAuthToken();
-    
-    console.log('API Request:', { url, method: options.method || 'GET' });
-    
+    console.log('API Request:', { url, method: options.method || 'GET', token });
     const config: RequestInit = {
       headers: {
         'Content-Type': 'application/json',
@@ -103,7 +101,9 @@ class ApiService {
   // User methods
   async getProfile() {
   const res = await this.request<{ success: boolean; data: User }>(API_ENDPOINTS.USERS.PROFILE);
-  return res.data; // chỉ trả về userDTO, bỏ success/message
+  // Log để kiểm tra dữ liệu thực tế trả về
+  console.log('getProfile response:', res);
+  return res.data;
   }
 
   async updateProfile(data: Partial<User>) {
@@ -119,9 +119,12 @@ class ApiService {
   }
 
   async getTask(id: string) {
-    return this.request<Task>(`${API_ENDPOINTS.TASKS.LIST}/${id}`);
+    return this.request<Task>(`${API_ENDPOINTS.TASKS.SELECT}/${id}`);
   }
-
+  async getTaskByUsername(username: string) {
+  // Đúng endpoint: /todos/user?username={username}
+  return this.request<TodoItem[]>(`${API_ENDPOINTS.TASKS.LIST}?username=${username}`);
+  }
   async createTask(taskData: Omit<Task, 'id'>) {
     return this.request<Task>(API_ENDPOINTS.TASKS.CREATE, {
       method: 'POST',

@@ -28,26 +28,39 @@ import {
 } from 'lucide-react';
 import { useTasks, useCreateTask, useUpdateTask, useDeleteTask } from '../hooks/useTasks';
 import { useUser, useLogout } from '@/features/auth/hooks/useAuth';
-import { Task, User } from '@/shared/types';
+import { Task, TodoItem, User } from '@/shared/types';
 
 export const DashboardPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [user, setUser] = useState<User | null>(null);
-  // API hooks
-  useEffect(() => {
-  const fetchProfile = async () => {
-    try {
-      const user = await apiService.getProfile();
-      setUser(user.data); // user chính là UserDTO
-    } catch (err) {
-      console.error("Lỗi lấy profile:", err);
-    }
-  };
-  fetchProfile();
-}, []);
+  const [tasks, setTasks] = useState<TodoItem[]>([]);
+  const [tasksLoading, setTasksLoading] = useState(false);
+  const [tasksError, setTasksError] = useState<string | null>(null);
+  const [userLoading, setUserLoading] = useState(false);
 
-  const {isLoading: userLoading } = useUser();
-  const { data: tasks = [], isLoading: tasksLoading, error: tasksError } = useTasks();
+  useEffect(() => {
+    const fetchProfileAndTasks = async () => {
+      setUserLoading(true);
+      try {
+        const user = await apiService.getProfile();
+        setUser(user);
+        setUserLoading(false);
+        setTasksLoading(true);
+        if(user && user.username){
+         const todos = await apiService.getTaskByUsername(user.username);
+         
+         setTasks(todos);
+        }
+        setTasksLoading(false);
+      } catch (err) {
+        setUserLoading(false);
+        setTasksLoading(false);
+        setTasksError('Lỗi lấy dữ liệu');
+        console.error('Lỗi lấy profile/todos:', err);
+      }
+    };
+    fetchProfileAndTasks();
+  }, []);
 
   console.log('📋 Dashboard tasks:', tasks);
   console.log('📋 Tasks type:', typeof tasks);
@@ -111,11 +124,11 @@ export const DashboardPage = () => {
             <Avatar className="w-10 h-10">
               <AvatarImage src={user?.avatar} />
               <AvatarFallback>
-                {user?.fullname?.split(' ').map(n => n[0]).join('').toUpperCase() || 'U'}
+                {user?.fullName?.split(' ').map(n => n[0]).join('').toUpperCase() || 'U'}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">{user?.fullname || user?.username || 'Loading...'}</p>
+              <p className="text-sm font-medium truncate">{user?.fullName || user?.username || 'Loading...'}</p>
               <p className="text-xs text-pink-100 truncate">{user?.email}</p>
             </div>
           </div>
@@ -211,7 +224,7 @@ export const DashboardPage = () => {
         {/* Content */}
         <main className="flex-1 overflow-auto p-6">
            <div className="mb-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-1">Welcome back, {user?.fullname || 'Loading...'} 👋</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-1">Welcome back, {user?.fullName || 'Loading...'} 👋</h2>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Tasks List */}
