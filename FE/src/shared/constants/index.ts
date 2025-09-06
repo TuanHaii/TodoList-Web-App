@@ -7,12 +7,13 @@ export const API_ENDPOINTS = {
     REFRESH: '/auth/refresh',
   },
   USERS: {
-    PROFILE: '/users/profile',
-    UPDATE: '/users/update',
+    PROFILE: '/user/profile',
+    UPDATE: '/user/update',
   },
   TASKS: {
     LIST: '/todos/user',
     CREATE: '/todos',
+    SELECT: (id: string) => `/todos/${id}`,
     UPDATE: (id: string) => `/todos/${id}`,
     DELETE: (id: string) => `/todos/${id}`,
   },

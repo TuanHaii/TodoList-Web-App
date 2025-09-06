@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiService } from '@/shared/services/api';
-import { Task, TodoItem } from '@/shared/types';
+import { Task, TodoItem, ApiResponse } from '@/shared/types';
 import { toast } from '@/shared/hooks/use-toast';
 
 export const useTasks = () => {
