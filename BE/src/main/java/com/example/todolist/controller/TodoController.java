@@ -26,7 +26,7 @@ public class TodoController {
     }
 
     // Lấy todos của user hiện tại - Tạm thời bỏ @PreAuthorize để test
-    @GetMapping
+    @GetMapping("/user")
     // @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public ResponseEntity<List<TodoItemDTO>> getTodos(@RequestParam(required = false) String username){
         if (username != null) {
@@ -77,6 +77,35 @@ public class TodoController {
         try {
             TodoItemDTO createdTodo = todoItemService.createSimpleTodoItem(title, username);
             return ResponseEntity.ok(createdTodo);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    // PUT /api/todos/{id} - Cập nhật todo
+    @PutMapping("/{id}")
+    public ResponseEntity<TodoItemDTO> updateTodo(@PathVariable Long id, 
+                                                 @RequestBody TodoItemDTO todoItemDTO) {
+        try {
+            TodoItemDTO updatedTodo = todoItemService.updateTodoItem(id, todoItemDTO);
+            if (updatedTodo != null) {
+                return ResponseEntity.ok(updatedTodo);
+            }
+            return ResponseEntity.notFound().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    // DELETE /api/todos/{id} - Xóa todo
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteTodo(@PathVariable Long id) {
+        try {
+            boolean deleted = todoItemService.deleteTodoItem(id);
+            if (deleted) {
+                return ResponseEntity.ok().build();
+            }
+            return ResponseEntity.notFound().build();
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().build();
         }

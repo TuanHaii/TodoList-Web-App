@@ -1,8 +1,10 @@
 package com.example.todolist.service;
 
 import com.example.todolist.entity.User;
+import com.example.todolist.entity.Role;
 import com.example.todolist.model.UserDTO;
 import com.example.todolist.repository.UserRepository;
+import com.example.todolist.repository.RoleRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -12,10 +14,12 @@ import java.util.stream.Collectors;
 @Service
 public class UserService {
     private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UserService(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -26,6 +30,11 @@ public class UserService {
                 .orElseThrow(() -> new RuntimeException("User not found with username: " + username));
     }
 
+    // Kiem tra user da ton tai theo username
+    public boolean existsByUsername(String username) {
+        return userRepository.findByUsername(username).isPresent();
+    }
+
     // Liet ke tat ca user
     public List<UserDTO> getAllUsers() {
         return userRepository.findAll().stream()
@@ -33,7 +42,7 @@ public class UserService {
                 .collect(Collectors.toList());
     }
 
-    // Add user moi
+    // Add user moi - Sửa logic role assignment
     public String addUser(UserDTO userDTO) {
         // Tạo User entity từ DTO
         User user = new User();
@@ -41,16 +50,22 @@ public class UserService {
         user.setEmail(userDTO.getEmail());
         user.setFullName(userDTO.getFullName());
         user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
-        user.setRole(userDTO.getRole() != null ? userDTO.getRole() : "USER"); // Đặt role mặc định
 
-        userRepository.save(user); // Lưu User entity, không phải DTO
+        // Tìm và set role (mặc định là USER nếu không có)
+        String roleName = userDTO.getRole() != null ? userDTO.getRole() : "USER";
+        Role role = roleRepository.findByName(roleName)
+                .orElseGet(() -> roleRepository.findByName("USER")
+                        .orElseThrow(() -> new RuntimeException("Default USER role not found")));
+        user.setRole(role);
+
+        userRepository.save(user);
         return "User registered successfully";
     }
 
     // Xác thực user (kiểm tra đăng nhập)
     public boolean validateUser(String username, String password) {
         return userRepository.findByUsername(username)
-                .map(user -> passwordEncoder.matches(password, user.getPassword())) // Sử dụng passwordEncoder.matches
+                .map(user -> passwordEncoder.matches(password, user.getPassword()))
                 .orElse(false);
     }
 
@@ -63,27 +78,14 @@ public class UserService {
 
         UserDTO dto = new UserDTO();
         dto.setId(user.getId());
+        dto.setUsername(user.getUsername());
+        dto.setEmail(user.getEmail());
+        dto.setCreatedAt(user.getCreatedAt());
+        dto.setFullName(user.getFullName());
 
-        // Kiểm tra null cho từng thuộc tính
-        if (user.getUsername() != null) {
-            dto.setUsername(user.getUsername());
-        }
-
-        if (user.getEmail() != null) {
-            dto.setEmail(user.getEmail());
-        }
-
-        if (user.getCreatedAt() != null) {
-            dto.setCreatedAt(user.getCreatedAt());
-        }
-
-        if (user.getFullName() != null) {
-            dto.setFullName(user.getFullName());
-        }
-
-        // Thêm field role vào DTO
+        // Chuyển Role entity thành String cho DTO
         if (user.getRole() != null) {
-            dto.setRole(user.getRole());
+            dto.setRole(user.getRole().getName());
         }
 
         return dto;

@@ -1,8 +1,14 @@
 import { API_ENDPOINTS } from '../constants';
-import { User, Task, ApiResponse } from '../types';
+import { User, Task, TodoItem, ApiResponse } from '../types';
 
 class ApiService {
-  private baseURL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+  private baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
+
+  constructor() {
+    console.log('🔧 API Service initialized');
+    console.log('🌍 Environment VITE_API_URL:', import.meta.env.VITE_API_URL);
+    console.log('🔗 Using baseURL:', this.baseURL);
+  }
 
   private getAuthToken(): string | null {
     return localStorage.getItem('authToken');
@@ -14,7 +20,7 @@ class ApiService {
   ): Promise<ApiResponse<T>> {
     const url = `${this.baseURL}${endpoint}`;
     const token = this.getAuthToken();
-    
+    console.log('API Request:', { url, method: options.method || 'GET', token });
     const config: RequestInit = {
       headers: {
         'Content-Type': 'application/json',
@@ -27,16 +33,23 @@ class ApiService {
     try {
       const response = await fetch(url, config);
       
+      console.log('API Response:', { status: response.status, ok: response.ok });
+      
       if (!response.ok) {
         if (response.status === 401) {
           // Token expired or invalid
           localStorage.removeItem('authToken');
           window.location.href = '/login';
         }
-        throw new Error(`HTTP error! status: ${response.status}`);
+        
+        const errorText = await response.text();
+        console.error('API Error Response:', errorText);
+        throw new Error(`HTTP error! status: ${response.status}, body: ${errorText}`);
       }
       
-      return await response.json();
+      const data = await response.json();
+      console.log('API Success Response:', data);
+      return data;
     } catch (error) {
       console.error('API request failed:', error);
       throw error;
@@ -44,12 +57,12 @@ class ApiService {
   }
 
   // Auth methods
-  async login(email: string, password: string) {
+  async login(username: string, password: string) {
     const response = await this.request<{ user: User; token: string }>(
       API_ENDPOINTS.AUTH.LOGIN,
       {
         method: 'POST',
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ username, password }),
       }
     );
     
@@ -60,12 +73,12 @@ class ApiService {
     return response;
   }
 
-  async register(name: string, email: string, password: string) {
+  async register(username: string, email: string, password: string) {
     const response = await this.request<{ user: User; token: string }>(
       API_ENDPOINTS.AUTH.REGISTER,
       {
         method: 'POST',
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ username, email, password }),
       }
     );
 
@@ -87,7 +100,10 @@ class ApiService {
 
   // User methods
   async getProfile() {
-    return this.request<User>(API_ENDPOINTS.USERS.PROFILE);
+  const res = await this.request<{ success: boolean; data: User }>(API_ENDPOINTS.USERS.PROFILE);
+  // Log để kiểm tra dữ liệu thực tế trả về
+  console.log('getProfile response:', res);
+  return res.data;
   }
 
   async updateProfile(data: Partial<User>) {
@@ -99,13 +115,16 @@ class ApiService {
 
   // Task methods
   async getTasks() {
-    return this.request<Task[]>(API_ENDPOINTS.TASKS.LIST);
+    return this.request<TodoItem[]>(API_ENDPOINTS.TASKS.LIST);
   }
 
   async getTask(id: string) {
-    return this.request<Task>(`${API_ENDPOINTS.TASKS.LIST}/${id}`);
+    return this.request<Task>(`${API_ENDPOINTS.TASKS.SELECT}/${id}`);
   }
-
+  async getTaskByUsername(username: string) {
+  // Đúng endpoint: /todos/user?username={username}
+  return this.request<TodoItem[]>(`${API_ENDPOINTS.TASKS.LIST}?username=${username}`);
+  }
   async createTask(taskData: Omit<Task, 'id'>) {
     return this.request<Task>(API_ENDPOINTS.TASKS.CREATE, {
       method: 'POST',

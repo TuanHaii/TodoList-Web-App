@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from '@/shared/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Badge } from '@/shared/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/components/ui/avatar';
 import { Input } from '@/shared/components/ui/input';
 import { Skeleton } from '@/shared/components/ui/skeleton';
+import TodayInfo from '../components/todayInfo';
+import { apiService } from '@/shared/services/api';
 import { 
   Search, 
   Bell, 
@@ -26,24 +28,62 @@ import {
 } from 'lucide-react';
 import { useTasks, useCreateTask, useUpdateTask, useDeleteTask } from '../hooks/useTasks';
 import { useUser, useLogout } from '@/features/auth/hooks/useAuth';
-import { Task } from '@/shared/types';
+import { Task, TodoItem, User } from '@/shared/types';
 
 export const DashboardPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  
-  // API hooks
-  const { data: user, isLoading: userLoading } = useUser();
-  const { data: tasks = [], isLoading: tasksLoading, error: tasksError } = useTasks();
+  const [user, setUser] = useState<User | null>(null);
+  const [tasks, setTasks] = useState<TodoItem[]>([]);
+  const [tasksLoading, setTasksLoading] = useState(false);
+  const [tasksError, setTasksError] = useState<string | null>(null);
+  const [userLoading, setUserLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchProfileAndTasks = async () => {
+      setUserLoading(true);
+      try {
+        const user = await apiService.getProfile();
+        setUser(user);
+        setUserLoading(false);
+        setTasksLoading(true);
+        if(user && user.username){
+         const todos = await apiService.getTaskByUsername(user.username);
+         
+         setTasks(todos);
+        }
+        setTasksLoading(false);
+      } catch (err) {
+        setUserLoading(false);
+        setTasksLoading(false);
+        setTasksError('Lỗi lấy dữ liệu');
+        console.error('Lỗi lấy profile/todos:', err);
+      }
+    };
+    fetchProfileAndTasks();
+  }, []);
+
+  console.log('📋 Dashboard tasks:', tasks);
+  console.log('📋 Tasks type:', typeof tasks);
+  console.log('📋 Is array:', Array.isArray(tasks));
   const createTaskMutation = useCreateTask();
   const updateTaskMutation = useUpdateTask();
   const deleteTaskMutation = useDeleteTask();
   const logoutMutation = useLogout();
 
   // Filter tasks based on search query
-  const filteredTasks = tasks.filter(task =>
-    task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    task.description.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredTasks = tasks.filter(task => {
+    console.log('🔍 Filtering task:', task);
+    if (!task.title || !task.description) {
+      console.log('⚠️ Task missing title or description:', task);
+      return false;
+    }
+    return task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+           task.description.toLowerCase().includes(searchQuery.toLowerCase());
+  });
+
+  console.log('📋 Total tasks:', tasks.length);
+  console.log('🔍 Filtered tasks:', filteredTasks.length);
+  console.log('🔍 Search query:', searchQuery);
 
   const handleLogout = () => {
     logoutMutation.mutate();
@@ -59,24 +99,6 @@ export const DashboardPage = () => {
   const handleDeleteTask = (taskId: string) => {
     if (confirm('Are you sure you want to delete this task?')) {
       deleteTaskMutation.mutate(taskId);
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Urgent': return 'bg-red-100 text-red-800';
-      case 'In Progress': return 'bg-blue-100 text-blue-800';
-      case 'Completed': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'High': return 'bg-red-100 text-red-800';
-      case 'Medium': return 'bg-yellow-100 text-yellow-800';
-      case 'Low': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
@@ -102,11 +124,11 @@ export const DashboardPage = () => {
             <Avatar className="w-10 h-10">
               <AvatarImage src={user?.avatar} />
               <AvatarFallback>
-                {user?.name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'U'}
+                {user?.fullName?.split(' ').map(n => n[0]).join('').toUpperCase() || 'U'}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">{user?.name || 'Loading...'}</p>
+              <p className="text-sm font-medium truncate">{user?.fullName || user?.username || 'Loading...'}</p>
               <p className="text-xs text-pink-100 truncate">{user?.email}</p>
             </div>
           </div>
@@ -184,20 +206,26 @@ export const DashboardPage = () => {
               </div>
             </div>
             
-            <div className="flex items-center space-x-3">
-              <Button size="sm">
-                <Plus className="w-4 h-4 mr-2" />
-                Add Task
+            <div className="flex items-center space-x-4">
+              <Button variant="ghost" size="icon" className="relative">
+                <Bell className="w-5 h-5" />
+                <span className="absolute -top-1 -right-1 bg-pink-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">3</span>
               </Button>
-              <Button variant="outline" size="sm">
-                <Bell className="w-4 h-4" />
+              <Button variant="ghost" size="icon">
+                <Settings className="w-5 h-5" />
               </Button>
+              <div className="text-right">
+                <p><TodayInfo /></p>
+              </div>
             </div>
           </div>
         </header>
 
         {/* Content */}
         <main className="flex-1 overflow-auto p-6">
+           <div className="mb-6">
+            <h2 className="text-2xl font-bold text-gray-900 mb-1">Welcome back, {user?.fullName || 'Loading...'} 👋</h2>
+          </div>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Tasks List */}
             <div className="lg:col-span-2 space-y-6">
@@ -206,6 +234,9 @@ export const DashboardPage = () => {
                   <CardTitle className="flex items-center justify-between">
                     <span>Active Tasks</span>
                     {tasksLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+                     <Button variant="ghost" size="sm" className="text-pink-500">
+                   + Add task
+                     </Button>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -236,7 +267,6 @@ export const DashboardPage = () => {
                       {filteredTasks.map((task) => (
                         <div key={task.id} className="flex items-start space-x-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                           <Avatar className="h-12 w-12">
-                            <AvatarImage src={task.image} />
                             <AvatarFallback>
                               <CheckSquare className="h-6 w-6" />
                             </AvatarFallback>
@@ -251,26 +281,24 @@ export const DashboardPage = () => {
                                   {task.description}
                                 </p>
                                 <div className="flex items-center space-x-2 mt-2">
-                                  <Badge className={getStatusColor(task.status)} variant="secondary">
-                                    {task.status}
+                                  <Badge className="bg-blue-100 text-blue-800" variant="secondary">
+                                    {task.completed ? 'Completed' : 'In Progress'}
                                   </Badge>
-                                  <Badge className={getPriorityColor(task.priority)} variant="secondary">
-                                    {task.priority}
+                                  <Badge className="bg-green-100 text-green-800" variant="secondary">
+                                    {task.category || 'General'}
                                   </Badge>
-                                  {task.dueDate && (
-                                    <div className="flex items-center text-xs text-gray-500">
-                                      <Clock className="h-3 w-3 mr-1" />
-                                      {new Date(task.dueDate).toLocaleDateString()}
-                                    </div>
-                                  )}
+                                  <div className="flex items-center text-xs text-gray-500">
+                                    <Clock className="h-3 w-3 mr-1" />
+                                    {task.username}
+                                  </div>
                                 </div>
                               </div>
                               <div className="flex items-center space-x-2 ml-4">
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  onClick={() => handleUpdateTaskStatus(task.id, 
-                                    task.status === 'Completed' ? 'In Progress' : 'Completed'
+                                  onClick={() => handleUpdateTaskStatus(task.id.toString(), 
+                                    task.completed ? 'In Progress' : 'Completed'
                                   )}
                                   disabled={updateTaskMutation.isPending}
                                 >
@@ -279,7 +307,7 @@ export const DashboardPage = () => {
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  onClick={() => handleDeleteTask(task.id)}
+                                  onClick={() => handleDeleteTask(task.id.toString())}
                                   disabled={deleteTaskMutation.isPending}
                                 >
                                   <Trash2 className="h-4 w-4" />
@@ -310,19 +338,19 @@ export const DashboardPage = () => {
                     <div className="flex justify-between">
                       <span className="text-sm text-gray-600">Completed</span>
                       <span className="font-medium text-green-600">
-                        {tasks.filter(t => t.status === 'Completed').length}
+                        {tasks.filter(t => t.completed).length}
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-sm text-gray-600">In Progress</span>
                       <span className="font-medium text-blue-600">
-                        {tasks.filter(t => t.status === 'In Progress').length}
+                        {tasks.filter(t => !t.completed).length}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">Urgent</span>
-                      <span className="font-medium text-red-600">
-                        {tasks.filter(t => t.status === 'Urgent').length}
+                      <span className="text-sm text-gray-600">Categories</span>
+                      <span className="font-medium text-purple-600">
+                        {Array.from(new Set(tasks.map(t => t.category))).length}
                       </span>
                     </div>
                   </div>

@@ -8,8 +8,8 @@ export const useLogin = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ email, password }: { email: string; password: string }) =>
-      apiService.login(email, password),
+    mutationFn: ({ username, password }: { username: string; password: string }) =>
+      apiService.login(username, password),
     onSuccess: (data) => {
       if (data.success) {
         queryClient.setQueryData(['user'], data.data.user);

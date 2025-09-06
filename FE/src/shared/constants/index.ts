@@ -1,20 +1,21 @@
 // API endpoints
 export const API_ENDPOINTS = {
   AUTH: {
-    LOGIN: '/api/auth/login',
-    REGISTER: '/api/auth/register',
-    LOGOUT: '/api/auth/logout',
-    REFRESH: '/api/auth/refresh',
+    LOGIN: '/auth/login',
+    REGISTER: '/auth/register',
+    LOGOUT: '/auth/logout',
+    REFRESH: '/auth/refresh',
   },
   USERS: {
-    PROFILE: '/api/users/profile',
-    UPDATE: '/api/users/update',
+    PROFILE: '/user/profile',
+    UPDATE: '/user/update',
   },
   TASKS: {
-    LIST: '/api/tasks',
-    CREATE: '/api/tasks',
-    UPDATE: (id: string) => `/api/tasks/${id}`,
-    DELETE: (id: string) => `/api/tasks/${id}`,
+    LIST: '/todos/user',
+    CREATE: '/todos',
+    SELECT: (id: string) => `/todos/${id}`,
+    UPDATE: (id: string) => `/todos/${id}`,
+    DELETE: (id: string) => `/todos/${id}`,
   },
 } as const;
 
@@ -28,7 +29,7 @@ export const ROUTES = {
 
 // Common constants
 export const APP_CONFIG = {
-  APP_NAME: 'MGX Platform',
+  APP_NAME: 'TODO LIST',
   VERSION: '1.0.0',
-  DESCRIPTION: 'A modern React application with shadcn/ui',
+  DESCRIPTION: '',
 } as const;

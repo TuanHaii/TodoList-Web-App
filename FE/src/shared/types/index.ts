@@ -2,10 +2,11 @@
 export interface User {
   id: string;
   email: string;
-  name: string;
+  username: string;
+  fullName: string;
+  password: string;
   avatar?: string;
   createdAt?: string;
-  updatedAt?: string;
 }
 
 export interface Task {
@@ -24,6 +25,16 @@ export interface Task {
   date?: string;
 }
 
+// Backend todo item type
+export interface TodoItem {
+  id: number;
+  title: string;
+  description: string;
+  completed: boolean;
+  username: string;
+  category: string;
+}
+
 export interface ApiResponse<T> {
   data: T;
   message: string;
@@ -32,13 +43,13 @@ export interface ApiResponse<T> {
 }
 
 export interface LoginRequest {
-  email: string;
+  username: string;
   password: string;
 }
 
 export interface RegisterRequest {
-  name: string;
   email: string;
+  username: string;
   password: string;
 }
 

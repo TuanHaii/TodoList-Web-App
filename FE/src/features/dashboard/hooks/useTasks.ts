@@ -1,13 +1,18 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiService } from '@/shared/services/api';
-import { Task } from '@/shared/types';
+import { Task, TodoItem, ApiResponse } from '@/shared/types';
 import { toast } from '@/shared/hooks/use-toast';
 
 export const useTasks = () => {
   return useQuery({
     queryKey: ['tasks'],
     queryFn: () => apiService.getTasks(),
-    select: (data) => data.data,
+    select: (data: TodoItem[] | ApiResponse<TodoItem[]>) => {
+      console.log('📝 Raw tasks data:', data);
+      // Nếu response là array trực tiếp, return data
+      // Nếu response là wrapper object, return data.data
+      return Array.isArray(data) ? data : (data?.data || []);
+    },
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
 };

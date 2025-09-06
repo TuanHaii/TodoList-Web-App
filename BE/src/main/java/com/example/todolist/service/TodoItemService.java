@@ -98,4 +98,41 @@ public class TodoItemService {
         dto.setCompleted(false);
         return createTodoItem(dto, username);
     }
+
+    // Cập nhật todo item
+    public TodoItemDTO updateTodoItem(Long id, TodoItemDTO todoItemDTO) {
+        TodoItem existingTodo = todoItemRepository.findById(id).orElse(null);
+        if (existingTodo == null) {
+            return null;
+        }
+
+        // Cập nhật các trường
+        if (todoItemDTO.getTitle() != null) {
+            existingTodo.setTitle(todoItemDTO.getTitle());
+        }
+        if (todoItemDTO.getDescription() != null) {
+            existingTodo.setDescription(todoItemDTO.getDescription());
+        }
+        existingTodo.setCompleted(todoItemDTO.isCompleted());
+
+        // Cập nhật category nếu có (category là String trong DTO)
+        if (todoItemDTO.getCategory() != null && !todoItemDTO.getCategory().isEmpty()) {
+            Category category = todoCategoryRepository.findByNameIgnoreCase(todoItemDTO.getCategory()).orElse(null);
+            if (category != null) {
+                existingTodo.setCategory(category);
+            }
+        }
+
+        TodoItem savedTodo = todoItemRepository.save(existingTodo);
+        return mapToDto(savedTodo);
+    }
+
+    // Xóa todo item
+    public boolean deleteTodoItem(Long id) {
+        if (todoItemRepository.existsById(id)) {
+            todoItemRepository.deleteById(id);
+            return true;
+        }
+        return false;
+    }
 }
