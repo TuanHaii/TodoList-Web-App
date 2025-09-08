@@ -58,6 +58,8 @@ class ApiService {
 
   // Auth methods
   async login(username: string, password: string) {
+    console.log('🚀 Login function called with:', { username, password });
+    
     const response = await this.request<{ user: User; token: string }>(
       API_ENDPOINTS.AUTH.LOGIN,
       {
@@ -66,12 +68,15 @@ class ApiService {
       }
     );
     
-    if (response.success && response.data.token) {
-      localStorage.setItem('authToken', response.data.token);
-    }
-    
-    return response;
+    console.log('✅ Login response:', response);
+  if (response.success && response.data.token) {
+    console.log('Saving token:', response.data.token);
+    localStorage.setItem('authToken', response.data.token);
+    console.log('Token saved:', localStorage.getItem('authToken'));
   }
+  
+  return response;
+}
 
   async register(username: string, email: string, password: string) {
     const response = await this.request<{ user: User; token: string }>(
@@ -118,20 +123,25 @@ class ApiService {
     return this.request<TodoItem[]>(API_ENDPOINTS.TASKS.LIST);
   }
 
-  async getTask(id: string) {
-    return this.request<Task>(`${API_ENDPOINTS.TASKS.SELECT}/${id}`);
-  }
+  // async getTask(id: string) {
+  //   return this.request<Task>(`${API_ENDPOINTS.TASKS.SELECT}/${id}`);
+  // }
   async getTaskByUsername(username: string) {
   // Đúng endpoint: /todos/user?username={username}
   return this.request<TodoItem[]>(`${API_ENDPOINTS.TASKS.LIST}?username=${username}`);
   }
-  async createTask(taskData: Omit<Task, 'id'>) {
-    return this.request<Task>(API_ENDPOINTS.TASKS.CREATE, {
+  async createTask(taskData: Omit<Task, 'id'>, username: string) {
+    return this.request<Task>(`${API_ENDPOINTS.TASKS.CREATE}?username=${username}`, {
       method: 'POST',
       body: JSON.stringify(taskData),
     });
   }
-
+  async createSimpleTask(taskData: Omit<Task, 'id' | 'username'>) {
+    return this.request<Task>(API_ENDPOINTS.TASKS.CREATE_SIMPLE, {
+      method: 'POST',
+      body: JSON.stringify(taskData.title),
+    });
+  }
   async updateTask(id: string, taskData: Partial<Task>) {
     return this.request<Task>(API_ENDPOINTS.TASKS.UPDATE(id), {
       method: 'PUT',

@@ -33,11 +33,9 @@ public class TodoController {
             // Nếu có username thì lấy theo username đó
             List<TodoItemDTO> result = todoItemService.findByUsername(username);
             return ResponseEntity.ok(result);
-        } else {
-            // Nếu không có username thì lấy tất cả
-            List<TodoItemDTO> result = todoItemService.getAllTodoItems();
-            return ResponseEntity.ok(result);
         }
+        return ResponseEntity.notFound().build();
+
     }
 
     // GET /api/todos/all - Lấy tất cả todo items - Tạm thời bỏ @PreAuthorize để test

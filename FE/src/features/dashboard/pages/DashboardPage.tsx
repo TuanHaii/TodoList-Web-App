@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { Button } from '@/shared/components/ui/button';
+  import { Button } from '@/shared/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Badge } from '@/shared/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/components/ui/avatar';
 import { Input } from '@/shared/components/ui/input';
 import { Skeleton } from '@/shared/components/ui/skeleton';
-import TodayInfo from '../components/todayInfo';
+import TodayInfo from '../hooks/todayInfo';
 import { apiService } from '@/shared/services/api';
+import AddTaskModal from '../components/addTaskModal';
 import { 
   Search, 
   Bell, 
@@ -37,7 +38,8 @@ export const DashboardPage = () => {
   const [tasksLoading, setTasksLoading] = useState(false);
   const [tasksError, setTasksError] = useState<string | null>(null);
   const [userLoading, setUserLoading] = useState(false);
-
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [activeMenu, setActiveMenu] = useState('dashboard');
   useEffect(() => {
     const fetchProfileAndTasks = async () => {
       setUserLoading(true);
@@ -89,16 +91,25 @@ export const DashboardPage = () => {
     logoutMutation.mutate();
   };
 
-  const handleUpdateTaskStatus = (taskId: string, newStatus: Task['status']) => {
+  const handleUpdateTask = (taskId: string, updates: Task['status']) => {
     updateTaskMutation.mutate({
       id: taskId,
-      data: { status: newStatus }
+      data: { status: updates }
     });
   };
 
   const handleDeleteTask = (taskId: string) => {
     if (confirm('Are you sure you want to delete this task?')) {
       deleteTaskMutation.mutate(taskId);
+    }
+  };
+
+  const handleCreateTask = (taskData: Omit<Task, 'id'>) => {
+    if (user && user.username) {
+      createTaskMutation.mutate({ 
+        taskData, 
+        username: user.username 
+      });
     }
   };
 
@@ -112,119 +123,168 @@ export const DashboardPage = () => {
   }
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      {/* Sidebar */}
-      <div className="w-64 bg-gradient-to-b from-pink-500 to-pink-600 text-white flex flex-col">
-        <div className="p-6">
-          <h1 className="text-xl font-bold">Dashboard</h1>
-        </div>
-        
-        <div className="px-6 mb-8">
-          <div className="flex items-center space-x-3 bg-white/10 rounded-lg p-3">
-            <Avatar className="w-10 h-10">
-              <AvatarImage src={user?.avatar} />
-              <AvatarFallback>
-                {user?.fullName?.split(' ').map(n => n[0]).join('').toUpperCase() || 'U'}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">{user?.fullName || user?.username || 'Loading...'}</p>
-              <p className="text-xs text-pink-100 truncate">{user?.email}</p>
+    <div className="h-screen bg-gray-50">
+      {/* Header - Full width */}
+      <header style={{background: '#fdf6ea'}} className="shadow-sm border-b border-gray-200 px-6 py-3 h-15 mb-20">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-6">
+            <h1 className="text-3xl font-bold ml-7">
+              <span style={{ color: '#FF6767' }}>Dash</span>
+              <span className="text-gray-900">board</span>
+            </h1>
+          </div>
+
+          {/* Centered Search Bar */}
+          <div className="absolute left-1/2 transform -translate-x-1/2">
+            <div className="relative flex items-center">
+              <Input
+                type="text"
+                placeholder="Search your task here..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-[500px] pr-0 border-0 bg-white shadow-md rounded-lg rounded-r-none"
+                style={{ 
+                  backgroundColor: 'white',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                }}
+              />
+              <button 
+                className=" absolute -right-2 h-full px-3 rounded-lg shadow-md"
+                style={{ 
+                  backgroundColor: '#FF6767',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                }}
+              >
+                <Search className="  text-white" />
+              </button>
+            </div>
+          </div>
+          
+          <div className="flex items-center space-x-4">
+            <Button variant="ghost" size="icon" className="relative rounded-xl text-white" style={{ backgroundColor: '#FF6767'}}>
+              <Bell className="w-5 h-5" />
+              <span className="absolute -top-1 -right-1 text-black bg-white text-xs rounded-xl w-4 h-4 flex items-center justify-center">3</span>
+            </Button>
+            <Button className='rounded-xl' variant="ghost" size="icon" style={{ backgroundColor: '#FF6767'}}>
+              <Settings className="w-5 h-5 text-white" />
+            </Button>
+            <div className="text-right">
+              <p><TodayInfo /></p>
             </div>
           </div>
         </div>
+      </header>
 
-        <nav className="flex-1 px-6">
-          <ul className="space-y-2">
+      <div className="flex h-[calc(100vh-4rem)] relative">
+        {/* Avatar positioned to overlap header and sidebar */}
+        <div className="absolute top-[-3em] left-32 transform -translate-x-1/2 z-30">
+          <Avatar className="w-24 h-24 border-4 border-white shadow-lg">
+            <AvatarImage src={user?.avatar} />
+            <AvatarFallback className="bg-white text-2xl font-bold" style={{ color: '#FF6767' }}>
+              {user?.fullName?.split(' ').map(n => n[0]).join('').toUpperCase() || 'U'}
+            </AvatarFallback>
+          </Avatar>
+        </div>
+
+        {/* Sidebar */}
+        <div style={{ backgroundColor: '#FF6767' }} className="rounded-lg w-64 bg-gradient-to-b text-white flex flex-col">
+          
+          {/* User info section with top padding for avatar */}
+          <div className="pt-12 pb-4">
+            <div className="flex flex-col items-center text-center">
+              <div className="h-10"></div> {/* Spacer for avatar */}
+              <h3 className="font-semibold text-lg mb-1">{user?.fullName || user?.username || 'Loading...'}</h3>
+              <p className="text-pink-100 text-sm opacity-90">{user?.email || 'Senior Data Scientist'}</p>
+            </div>
+          </div>
+
+          {/* Navigation menu */}
+          <nav className="flex-1 px-6 mt-4">
+            <ul className="space-y-3">
             <li>
-              <a href="#" className="flex items-center space-x-3 py-2 px-3 rounded-lg bg-white/20">
-                <LayoutDashboard className="w-5 h-5" />
-                <span>Dashboard</span>
-              </a>
+              <button 
+                onClick={() => setActiveMenu('dashboard')}
+                className={`w-full flex items-center space-x-3 py-3 px-4 rounded-xl transition-colors ${
+                  activeMenu === 'dashboard' 
+                    ? 'bg-white' 
+                    : 'text-white/80 hover:text-white hover:bg-white/10'
+                }`}
+                style={activeMenu === 'dashboard' ? { color: '#FF6767' } : {}}
+              >
+                <LayoutDashboard   className=" w-5 h-5" />
+                <span className="font-medium">Dashboard</span>
+              </button>
             </li>
             <li>
-              <a href="#" className="flex items-center space-x-3 py-2 px-3 rounded-lg hover:bg-white/10">
+              <button 
+                onClick={() => setActiveMenu('vital-task')}
+                className={`w-full flex items-center space-x-3 py-3 px-4 rounded-xl transition-colors ${
+                  activeMenu === 'vital-task' 
+                    ? 'bg-white' 
+                    : 'text-white/80 hover:text-white hover:bg-white/10'
+                }`}
+                style={activeMenu === 'vital-task' ? { color: '#FF6767' } : {}}
+              >
+                <Eye className="w-5 h-5" />
+                <span>Vital Task</span>
+              </button>
+            </li>
+            <li>
+              <button 
+                onClick={() => setActiveMenu('my-task')}
+                className={`w-full flex items-center space-x-3 py-3 px-4 rounded-xl transition-colors ${
+                  activeMenu === 'my-task' 
+                    ? 'bg-white' 
+                    : 'text-white/80 hover:text-white hover:bg-white/10'
+                }`}
+                style={activeMenu === 'my-task' ? { color: '#FF6767' } : {}}
+              >
                 <CheckSquare className="w-5 h-5" />
-                <span>Tasks</span>
-              </a>
+                <span>My Task</span>
+              </button>
             </li>
             <li>
-              <a href="#" className="flex items-center space-x-3 py-2 px-3 rounded-lg hover:bg-white/10">
-                <Calendar className="w-5 h-5" />
-                <span>Calendar</span>
-              </a>
-            </li>
-            <li>
-              <a href="#" className="flex items-center space-x-3 py-2 px-3 rounded-lg hover:bg-white/10">
-                <Users className="w-5 h-5" />
-                <span>Team</span>
-              </a>
+              <button 
+                onClick={() => setActiveMenu('task-categories')}
+                className={`w-full flex items-center space-x-3 py-3 px-4 rounded-xl transition-colors ${
+                  activeMenu === 'task-categories' 
+                    ? 'bg-white' 
+                    : 'text-white/80 hover:text-white hover:bg-white/10'
+                }`}
+                style={activeMenu === 'task-categories' ? { color: '#FF6767' } : {}}
+              >
+                <FolderOpen className="w-5 h-5" />
+                <span>Task Categories</span>
+              </button>
             </li>
           </ul>
-        </nav>
+            </nav>
 
-        <div className="p-6 space-y-2">
-          <button className="flex items-center space-x-3 py-2 px-3 rounded-lg hover:bg-white/10 w-full text-left">
-            <Settings className="w-5 h-5" />
-            <span>Settings</span>
-          </button>
-          <button className="flex items-center space-x-3 py-2 px-3 rounded-lg hover:bg-white/10 w-full text-left">
-            <HelpCircle className="w-5 h-5" />
-            <span>Help</span>
-          </button>
-          <button 
-            onClick={handleLogout}
-            disabled={logoutMutation.isPending}
-            className="flex items-center space-x-3 py-2 px-3 rounded-lg hover:bg-white/10 w-full text-left disabled:opacity-50"
-          >
-            {logoutMutation.isPending ? (
-              <Loader2 className="w-5 h-5 animate-spin" />
-            ) : (
-              <LogOut className="w-5 h-5" />
-            )}
-            <span>Logout</span>
-          </button>
+            {/* Logout section */}
+            <div className="p-6 mt-auto">
+              <button 
+                onClick={handleLogout}
+                disabled={logoutMutation.isPending}
+                className="flex items-center space-x-3 py-3 px-4 rounded-xl hover:bg-white/10 w-full text-left text-white/80 hover:text-white transition-colors disabled:opacity-50"
+              >
+                {logoutMutation.isPending ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <LogOut className="w-5 h-5" />
+                )}
+                <span>Logout</span>
+              </button>
+            </div>
         </div>
-      </div>
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Header */}
-        <header className="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4 flex-1">
-              <h2 className="text-2xl font-bold text-gray-900">Tasks</h2>
-              <div className="relative max-w-md">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <Input
-                  type="text"
-                  placeholder="Search tasks..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-            </div>
-            
-            <div className="flex items-center space-x-4">
-              <Button variant="ghost" size="icon" className="relative">
-                <Bell className="w-5 h-5" />
-                <span className="absolute -top-1 -right-1 bg-pink-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">3</span>
-              </Button>
-              <Button variant="ghost" size="icon">
-                <Settings className="w-5 h-5" />
-              </Button>
-              <div className="text-right">
-                <p><TodayInfo /></p>
-              </div>
-            </div>
-          </div>
-        </header>
-
         {/* Content */}
-        <main className="flex-1 overflow-auto p-6">
+        <main className="flex-1 overflow-auto p-6 bg-gray-50">
            <div className="mb-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-1">Welcome back, {user?.fullName || 'Loading...'} 👋</h2>
+            <h2 className="text-3xl font-bold text-gray-900 mb-1">
+              Welcome back, {user?.fullName?.split(' ')[0] || user?.username || 'User'} 👋
+            </h2>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Tasks List */}
@@ -234,9 +294,18 @@ export const DashboardPage = () => {
                   <CardTitle className="flex items-center justify-between">
                     <span>Active Tasks</span>
                     {tasksLoading && <Loader2 className="h-4 w-4 animate-spin" />}
-                     <Button variant="ghost" size="sm" className="text-pink-500">
-                   + Add task
-                     </Button>
+                    <Button variant="ghost" size="sm" className="" style={{ color: '#FF6767' }} onClick={() => setShowAddModal(true)}>
+                                        + Add task
+                                      </Button>
+                                      <AddTaskModal 
+                                        open={showAddModal}
+                                        onClose={() => setShowAddModal(false)}
+                                        onSubmit={async (form) => {
+                                          await createTaskMutation.mutateAsync(form);
+                                          setShowAddModal(false);
+                                        }}
+                                      />
+
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -297,7 +366,7 @@ export const DashboardPage = () => {
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  onClick={() => handleUpdateTaskStatus(task.id.toString(), 
+                                  onClick={() => handleUpdateTask(task.id.toString(), 
                                     task.completed ? 'In Progress' : 'Completed'
                                   )}
                                   disabled={updateTaskMutation.isPending}
@@ -372,6 +441,7 @@ export const DashboardPage = () => {
           </div>
         </main>
       </div>
+    </div>
     </div>
   );
 };

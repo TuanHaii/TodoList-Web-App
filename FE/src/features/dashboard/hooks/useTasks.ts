@@ -17,12 +17,12 @@ export const useTasks = () => {
   });
 };
 
-export const useTask = (id: string) => {
+export const useTask = (username: string) => {
   return useQuery({
-    queryKey: ['task', id],
-    queryFn: () => apiService.getTask(id),
+    queryKey: ['task', username],
+    queryFn: () => apiService.getTaskByUsername(username),
     select: (data) => data.data,
-    enabled: !!id,
+    enabled: !!username,
   });
 };
 
@@ -30,7 +30,8 @@ export const useCreateTask = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (taskData: Omit<Task, 'id'>) => apiService.createTask(taskData),
+    mutationFn: ({ taskData, username }: { taskData: Omit<Task, 'id'>; username: string }) => 
+      apiService.createTask(taskData, username),
     onSuccess: (data) => {
       if (data.success) {
         queryClient.invalidateQueries({ queryKey: ['tasks'] });
@@ -50,7 +51,29 @@ export const useCreateTask = () => {
     },
   });
 };
-
+export const useCreateSimpleTask = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (taskData: Omit<Task, 'id' | 'username'>) => apiService.createSimpleTask(taskData),
+    onSuccess: (data) => {
+      if (data.success) {
+        queryClient.invalidateQueries({ queryKey: ['tasks'] });
+        toast({
+          title: 'Success',
+          description: 'Simple task created successfully!',
+        });
+      }
+    },
+    onError: (error) => {
+      toast({
+        title: 'Error',
+        description: 'Failed to create simple task. Please try again.',
+        variant: 'destructive',
+      });
+      console.error('Create simple task error:', error);
+    },
+  });
+}
 export const useUpdateTask = () => {
   const queryClient = useQueryClient();
 

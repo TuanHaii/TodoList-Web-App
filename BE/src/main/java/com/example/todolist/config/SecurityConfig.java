@@ -35,18 +35,20 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .cors(cors -> cors.configurationSource(corsConfigurationSource)) // Enable CORS
-            .csrf(csrf -> csrf.disable()) // Tắt CSRF cho API testing
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Stateless cho API
+            .cors(cors -> cors.configurationSource(corsConfigurationSource))
+            .csrf(csrf -> csrf.disable())
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(authz -> authz
-                .requestMatchers("/api/**").permitAll() // Cho phép tất cả API endpoints không cần authentication
-                .requestMatchers("/css/**", "/js/**", "/images/**").permitAll() // Cho phép static resources
-                .requestMatchers("/health", "/actuator/**").permitAll() // Cho phép health check
-                .requestMatchers("/", "/login", "/public/**").permitAll() // Cho phép trang chủ và login
-                .anyRequest().permitAll() // Tạm thời cho phép tất cả để test
+                // Cho phép các endpoint public truy cập tự do
+                .requestMatchers("/api/auth/**", "/api/public/**", "/login", "/register", "/", "/health", "/actuator/**", "/css/**", "/js/**", "/images/**").permitAll()
+                // Các endpoint còn lại yêu cầu xác thực
+                .anyRequest().authenticated()
             )
-            .httpBasic(Customizer.withDefaults()) // Sử dụng HTTP Basic thay vì form login
-            .formLogin(form -> form.disable()); // Tắt form login để tránh redirect
+            .httpBasic(Customizer.withDefaults())
+            .formLogin(form -> form.disable());
+
+        // Thêm JWT filter vào filter chain
+        http.addFilterBefore(jwtAuthFilter, org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

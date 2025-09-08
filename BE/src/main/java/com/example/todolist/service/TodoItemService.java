@@ -26,7 +26,7 @@ public class TodoItemService {
         this.todoCategoryRepository = todoCategoryRepository;
     }
 
-    // Lấy tất cả todo items
+
     public List<TodoItemDTO> findByUsername(String username) {
         return todoItemRepository.findByUsername(username).stream()
                 .map(this::mapToDto)
