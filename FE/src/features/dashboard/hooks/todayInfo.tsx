@@ -5,9 +5,9 @@ function TodayInfo() {
   const dateString = today.toLocaleDateString("en-US", { day: "numeric", month: "long", year: "numeric" });
 
   return (
-    <div className="text-right">
-      <p className="text-sm font-medium">{dayName}</p>
-      <p className="text-xs text-gray-500">{dateString}</p>
+    <div className="text-left">
+      <p className="text-sm text-black font-bold">{dayName}</p>
+      <p className="text-sm text-blue-500">{dateString}</p>
     </div>
   );
 }
