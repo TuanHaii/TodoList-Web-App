@@ -165,8 +165,13 @@ export const DashboardPage = () => {
               <Bell className="w-5 h-5" />
               <span className="absolute -top-1 -right-1 text-black bg-white text-xs rounded-xl w-4 h-4 flex items-center justify-center">3</span>
             </Button>
-            <Button className='rounded-xl' variant="ghost" size="icon" style={{ backgroundColor: '#FF6767'}}>
-              <Settings className="w-5 h-5 text-white" />
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="rounded-xl text-white hover:text-black hover:bg-opacity-80 transition-colors" 
+              style={{ backgroundColor: '#FF6767' }}
+            >
+              <Settings className="w-5 h-5" />
             </Button>
             <div className="text-right">
               <p><TodayInfo /></p>
@@ -175,12 +180,27 @@ export const DashboardPage = () => {
         </div>
       </header>
 
-      <div className="flex h-[calc(100vh-4rem)] relative">
+      <div className="flex h-[calc(100vh-4rem)]">
         {/* Avatar positioned to overlap header and sidebar */}
-        <div className="absolute top-[-3em] left-32 transform -translate-x-1/2 z-30">
-          <Avatar className="w-24 h-24 border-4 border-white shadow-lg">
+        <div className="absolute top-[5em] left-32 transform -translate-x-1/2 z-30">
+          <Avatar 
+            className="border-4 border-white shadow-lg"
+            style={{ 
+              width: '8rem', 
+              height: '8rem',
+              minWidth: '8.5rem', 
+              minHeight: '8.5rem'
+            }}
+          >
             <AvatarImage src={user?.avatar} />
-            <AvatarFallback className="bg-white text-2xl font-bold" style={{ color: '#FF6767' }}>
+            <AvatarFallback 
+              className="bg-white text-2xl font-bold" 
+              style={{ 
+                color: '#FF6767',
+                width: '100%', 
+                height: '100%'
+              }}
+            >
               {user?.fullName?.split(' ').map(n => n[0]).join('').toUpperCase() || 'U'}
             </AvatarFallback>
           </Avatar>
