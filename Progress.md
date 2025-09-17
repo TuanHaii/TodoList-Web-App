@@ -1,0 +1,2 @@
+- Cần viết thêm bên BE nitifications
+- Viết hiển thị khi click vào bell

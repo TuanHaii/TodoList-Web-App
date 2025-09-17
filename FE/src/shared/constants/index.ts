@@ -13,7 +13,7 @@ export const API_ENDPOINTS = {
   TASKS: {
     LIST: '/todos/user',
     CREATE: '/todos',
-    SELECT: (id: string) => `/todos/${id}`,
+    CREATE_SIMPLE: '/todos/simple',
     UPDATE: (id: string) => `/todos/${id}`,
     DELETE: (id: string) => `/todos/${id}`,
   },
