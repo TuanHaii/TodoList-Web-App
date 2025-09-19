@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/shared/components/ui/avat
 import { Input } from '@/shared/components/ui/input';
 import { Skeleton } from '@/shared/components/ui/skeleton';
 import TodayInfo from '../hooks/todayInfo';
+import NotificationDropdown from '../components/NotificationDropdown';
 import { apiService } from '@/shared/services/api';
 import AddTaskModal from '../components/addTaskModal';
 import { 
@@ -162,8 +163,7 @@ export const DashboardPage = () => {
           
           <div className="flex items-center space-x-4">
             <Button variant="ghost" size="icon" className="relative rounded-xl text-white" style={{ backgroundColor: '#FF6767'}}>
-              <Bell className="w-5 h-5" />
-              <span className="absolute -top-1 -right-1 text-black bg-white text-xs rounded-xl w-4 h-4 flex items-center justify-center">3</span>
+                <NotificationDropdown/>
             </Button>
             <Button 
               variant="ghost" 
